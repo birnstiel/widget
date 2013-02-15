@@ -24,6 +24,27 @@ def main():
 	plt.show()
 
 def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True):
+	"""
+	creates a GUI to display timedependent 1D or 2D data.
+	
+	Arguments:
+	x    = the x axis array of length nx
+	data = array of the form (nt,nx) for nt snapshots
+	
+	Keywords:
+	*y*     		y axis array for data of a form (nt*ny,nx) where the first ny rows are the fist snapshot
+	*data2*			for plotting additional data (only 1D data) on the 1D or 2D plot
+	*times*			times of the snapshots, to be shown in the title of the axes
+	*i_start*		index of initial snapshot
+	*[x,y,z]log* 	true: use logarithmic scale in [x,y,z]
+	*[x,y,z]lim*	give limits [x0,x1], ... for the specified axes    
+	*[x,y]label*	label for the [x,y] axes
+	lstyle			style to be used for the lines
+	*ncont*			number of contours for the contour plot
+	*cmap*			color map for the contours
+	*fill*			if true, data lower than zlim[0] will be rendered at lowest color level
+					if false, will be rendered white 
+	"""
 	#
 	# general setup
 	#
@@ -85,7 +106,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	#
 	# set up figure
 	#
-	fig=plt.figure()
+	plt.figure()
 	#
 	# ===============
 	# INITIAL DRAWING
