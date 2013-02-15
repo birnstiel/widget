@@ -6,19 +6,20 @@ import sys
 import os
 
 def main():
-	x = np.linspace(1.0, 10.0, 200)
-	y = np.linspace(1.0, 10.0, 200)
-	
+	x     = np.linspace(1.0, 10.0, 200)
+	y     = np.linspace(1.0, 10.0, 200)
 	times = np.linspace(1.0,11.0,100)
+	X,Y   = np.meshgrid(x,y)
+	
 	data1D = np.array([t*np.sin(x*np.pi*3)+6 for t in times])
 	data2D = np.zeros([len(y)*len(times),len(x)])
+	
 	for it in np.arange(len(times)):
-		for iy in np.arange(len(y)):
-			data2D[it*len(y)+iy,:] = (x+y[iy])*np.exp(-6.0*((x-times[it])**2+(y[iy]-times[it])**2)) 
+		data2D[it*len(y)+np.arange(len(y)),:] = (X+Y)*np.exp(-6.0*((X-times[it])**2+(Y-times[it])**2)) 
 	
 	plotter(x,data1D,times=times,data2=[0.5*data1D,0.25*data1D+5])
 	
-	plotter(x,data2D,y=y,times=times,data2=[data1D,0.5*data1D])
+	plotter(x,data2D,y=y,times=times,data2=data1D)
 	
 	plt.show()
 
