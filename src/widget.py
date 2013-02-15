@@ -158,6 +158,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	axcolor     = 'lightgoldenrodyellow'
 	ax_time     = plt.axes([0.25, 0.1, 0.65, 0.03], axisbg=axcolor)
 	slider_time = Slider(ax_time, 'time', 0.0, i_max, valinit=i_start,valfmt='%i')
+	ax._widgets = [slider_time] # avoids garbage collection
 	#
 	# define slider update funcion
 	#
@@ -198,6 +199,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	#
 	ax_xlog = plt.axes([0.5, 0.025, 0.1, 0.04])
 	button_xlog = Button(ax_xlog, 'xscale', color=axcolor, hovercolor='0.975')
+	ax._widgets += [button_xlog] # avoids garbage collection
 	def xlog_callback(event):
 		if ax.get_xscale() == 'log':
 			ax.set_xscale('linear')
@@ -210,6 +212,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	#
 	ax_ylog = plt.axes([0.6, 0.025, 0.1, 0.04])
 	button_ylog = Button(ax_ylog, 'yscale', color=axcolor, hovercolor='0.975')
+	ax._widgets += [button_ylog] # avoids garbage collection
 	def ylog_callback(event):
 		if ax.get_yscale() == 'log':
 			ax.set_yscale('linear')
@@ -282,6 +285,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 		print('saved %s'%fname)
 		plt.close(newfig)
 	button_plot.on_clicked(plotbutton_callback)
+	ax._widgets += [button_plot] # avoids garbage collection
 	#
 	# GO
 	#
