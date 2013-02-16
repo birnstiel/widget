@@ -2,8 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
-import sys
-import os
+import sys,os,subprocess,shutil
 
 def main():
 	x     = np.linspace(1.0, 10.0, 200)
@@ -225,7 +224,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	#
 	ax_plotbutton = plt.axes([0.8, 0.025, 0.1, 0.04])
 	button_plot = Button(ax_plotbutton, 'plot', color=axcolor, hovercolor='0.975')
-	def plotbutton_callback(event):
+	def plotbutton_callback(event,img_name=None,img_format='.pdf'):
 		# ===================================================
 		# this part is copied from above, replacing ax=>newax
 		# and getting the snapshot index from the slider
@@ -271,25 +270,75 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 		# =========================================
 		# now set the limits as in the other figure
 		# =========================================
+		#
 		newax.set_xlim(ax.get_xlim())
 		newax.set_ylim(ax.get_ylim())
 		newax.set_xscale(ax.get_xscale())
 		newax.set_yscale(ax.get_yscale())
 		#
-		# set the original figure active again
+		# =========================================
+		# now set the limits as in the other figure
+		# =========================================
 		#
-		j=0
-		while os.path.isfile('figure_%03i.pdf'%j): j+=1
-		fname = 'figure_%03i.pdf'%j
-		plt.savefig(fname)
-		print('saved %s'%fname)
+		if '.' not in img_format: img_format = '.'+img_format
+		if img_name==None:
+			j=0
+			while os.path.isfile('figure_%03i%s'%(j,img_format)): j+=1
+			img_name = 'figure_%03i%s'%(j,img_format)
+		else:
+			img_name = img_name.replace(img_format,'')+img_format
+		plt.savefig(img_name)
+		print('saved %s'%img_name)
 		plt.close(newfig)
 	button_plot.on_clicked(plotbutton_callback)
 	ax._widgets += [button_plot] # avoids garbage collection
 	#
+	# plot button
+	#
+	ax_moviebutton = plt.axes([0.7, 0.025, 0.1, 0.04])
+	button_movie = Button(ax_moviebutton, 'movie', color=axcolor, hovercolor='0.975')
+	def moviebutton_callback(event):
+		dirname    = 'movie_images'
+		img_format = '.png'
+		#
+		# create folder
+		#
+		if os.path.isdir(dirname):
+			print('WARNING: movie_images folder already exists, please delete it first')
+			return
+		else:
+			os.mkdir(dirname)
+		#
+		# save all the images
+		#
+		i0 = int(round(slider_time.val))
+		for j,i in enumerate(np.arange(i0,nt)):
+			slider_time.set_val(i)
+			plotbutton_callback(None,img_name=dirname+os.sep+'img_%03i'%j, img_format=img_format)
+		#
+		# create the movie
+		#
+		moviename = 'movie.mp4'
+		ret=subprocess.call(['ffmpeg','-i',dirname+os.sep+'img_%03d'+img_format,'-r','10','-b','512k',moviename]);
+		if ret==0:
+			#
+			# delete the images & the folder
+			#
+			for j,i in enumerate(np.arange(nt)):
+				os.remove(dirname+os.sep+'img_%03i%s'%(j,img_format))
+			shutil.rmtree(dirname)
+		else:
+			print('WARNING: movie could not be produced, keeping images')
+		#
+		# reset slider
+		#
+		slider_time.set_val(i0)
+	button_movie.on_clicked(moviebutton_callback)
+	ax._widgets += [button_movie] # avoids garbage collection
+	#
 	# GO
 	#
-	plt.show()
+	plt.draw()
 	
 if __name__ == "__main__":
 	main()
