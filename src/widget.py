@@ -359,7 +359,7 @@ def plotter(x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog
 		# save all the images
 		#
 		i0 = int(round(slider_time.val))
-		for j,i in enumerate(np.arange(i0,nt)):
+		for j,i in enumerate(np.arange(i0,nt-1)):
 			slider_time.set_val(i)
 			plotbutton_callback(None,img_name=dirname+os.sep+'img_%03i'%j, img_format=img_format)
 		#
@@ -371,7 +371,7 @@ def plotter(x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog
 			#
 			# delete the images & the folder
 			#
-			for j,i in enumerate(np.arange(nt)):
+			for j,i in enumerate(np.arange(i0,nt-1)):
 				os.remove(dirname+os.sep+'img_%03i%s'%(j,img_format))
 			shutil.rmtree(dirname)
 			print('*** Movie successfully created ***')
