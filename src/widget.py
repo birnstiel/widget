@@ -18,27 +18,34 @@ def main():
 	
 	plotter(x,data1D,times=times,data2=[0.5*data1D,0.25*data1D+5])
 	
-	plotter(x,data2D,y=y,times=times,data2=data1D)
+	plotter(x,data2D,y=y,times=times,data3=[times,5.0],lstyle=['-','--'])
 	
 	plt.show()
 
-def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True):
+def plotter(x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True):
 	"""
 	creates a GUI to display timedependent 1D or 2D data.
 	
 	Arguments:
 	x    = the x axis array of length nx
-	data = array of the form (nt,nx) for nt snapshots
+	data = - array of the form (nt,nx) for nt 1D snapshots
+		   - array of the form (nt*ny,nx) for nt 2D snapshots
 	
 	Keywords:
 	*y*     		y axis array for data of a form (nt*ny,nx) where the first ny rows are the fist snapshot
-	*data2*			for plotting additional data (only 1D data) on the 1D or 2D plot
-	*times*			times of the snapshots, to be shown in the title of the axes
+	*data2*			for plotting additional 1-dimensional y(x) data on the 1D or 2D plot
+					join in a list if several data-sets should be included like
+					[y1 , y2] where y1,y2 are arrays of shape (nt,nx)
+	*data3*			for plotting additional vertical lines on the 1D or 2D plot
+					can be either nt points for x(t)-data or one single float if time dependent
+					join to lists if more data is plotted 
+	*times*			times of the snapshots, to be shown in the title of the axes, if given
 	*i_start*		index of initial snapshot
 	*[x,y,z]log* 	true: use logarithmic scale in [x,y,z]
 	*[x,y,z]lim*	give limits [x0,x1], ... for the specified axes    
 	*[x,y]label*	label for the [x,y] axes
-	lstyle			style to be used for the lines
+	*lstyle*		style (string) or styles (list of strings) to be used for the lines
+					will be repeatet if too short
 	*ncont*			number of contours for the contour plot
 	*cmap*			color map for the contours
 	*fill*			if true, data lower than zlim[0] will be rendered at lowest color level
@@ -77,6 +84,16 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	if type(data2).__name__=='ndarray':
 		data2 = [data2]
 	#
+	# convert data3 if necessary
+	#
+	if type(data3).__name__=='ndarray':
+		data3 = [data3]
+	#
+	# convert to arrays
+	#
+	for i in np.arange(len(data3)):
+		data3[i]=np.array(data3[i],ndmin=1)
+	#
 	# set limits
 	#
 	if xlim==None: xlim=[x[0],x[-1]]
@@ -102,6 +119,16 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	#
 	if ncont==None:
 		ncont=zlim[-1]-zlim[0]+1
+	#
+	# set line styles
+	#
+	if type(lstyle).__name__=='str': lstyle=[lstyle]
+	len_ls0 = len(lstyle)
+	len_ls1 = len(data2)+len(data3)+1
+	dummy = []
+	for j in np.arange(len_ls1):
+		dummy += [lstyle[np.mod(j,len_ls0)]]
+	lstyle = dummy
 	#
 	# set up figure
 	#
@@ -132,7 +159,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 		#
 		# line data
 		#
-		l, = ax.plot(x,data[i_start], lw=2,ls=lstyle)
+		l, = ax.plot(x,data[i_start],lstyle[0],lw=2)
 	else:
 		#
 		# 2D data
@@ -143,9 +170,16 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 	# plot additional line data
 	#
 	add_lines = []
-	for d in data2:
-		l2, = ax.plot(x,d[i_start], lw=2,ls=lstyle)
+	for j,d in enumerate(data2):
+		l2, = ax.plot(x,d[i_start],lstyle[j+1],lw=2)
 		add_lines+=[l2]
+	#
+	# plot additional vertical lines
+	#
+	add_lines2 = []
+	for j,d in enumerate(data3):
+		l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+		add_lines2+=[l3]
 	#
 	# ========
 	# Make GUI
@@ -184,6 +218,12 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 		#
 		for d,l2 in zip(data2,add_lines):
 			l2.set_ydata(d[i])
+		#
+		# update additional vertical lines
+		#
+		for d,l3 in zip(data3,add_lines2):
+			l3.set_xdata(d[min(i,len(d)-1)])
+			l3.set_ydata(ax.get_ylim())
 		#
 		# update title
 		#
@@ -252,7 +292,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 			#
 			# line data
 			#
-			l, = newax.plot(x,data[i], lw=2,ls=lstyle)
+			l, = newax.plot(x,data[i],lstyle[0],lw=2)
 		else:
 			#
 			# 2D data
@@ -263,9 +303,16 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 		# plot additional line data
 		#
 		add_lines = []
-		for d in data2:
-			l2, = newax.plot(x,d[i], lw=2,ls=lstyle)
+		for j,d in enumerate(data2):
+			l2, = newax.plot(x,d[i],lstyle[j+1],lw=2)
 			add_lines+=[l2]
+		#
+		# plot additional vertical lines
+		#
+		add_lines2 = []
+		for j,d in enumerate(data3):
+			l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+			add_lines2+=[l3]
 		#
 		# =========================================
 		# now set the limits as in the other figure
@@ -327,6 +374,7 @@ def plotter(x,data,y=None,data2=[],times=None,i_start=0,xlog=False,ylog=False,zl
 			for j,i in enumerate(np.arange(nt)):
 				os.remove(dirname+os.sep+'img_%03i%s'%(j,img_format))
 			shutil.rmtree(dirname)
+			print('*** Movie successfully created ***')
 		else:
 			print('WARNING: movie could not be produced, keeping images')
 		#
