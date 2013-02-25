@@ -16,14 +16,14 @@ def main():
 	for it in np.arange(len(times)):
 		data2D[it*len(y)+np.arange(len(y)),:] = (X+Y)*np.exp(-6.0*((X-times[it])**2+(Y-times[it])**2)) 
 	
-	plotter(x,data1D,times=times,data2=[0.5*data1D,0.25*data1D+5])
+	p = plotter(x,data1D,times=times,data2=[0.5*data1D,0.25*data1D+5])
 	
-	plotter(x,data2D,y=y,times=times,data3=[times,5.0],lstyle=['-','--'])
+	plotter(x,data2D,y=y,times=times,data3=[times,5.0],lstyle=['-','--'],ext_link=p)
 	
 	plt.show()
 
 class plotter:
-	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True,ext_link=False):
+	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True,ext_link=None):
 		"""
 		creates a GUI to display timedependent 1D or 2D data.
 		
@@ -50,7 +50,8 @@ class plotter:
 		*ncont*			number of contours for the contour plot
 		*cmap*			color map for the contours
 		*fill*			if true, data lower than zlim[0] will be rendered at lowest color level
-						if false, will be rendered white 
+						if false, will be rendered white
+		*ext_link*		link an onther plotter object to the slider of the current one 
 		"""
 		#
 		# general setup
@@ -234,6 +235,10 @@ class plotter:
 			# update plot
 			#
 			plt.draw()
+			#
+			# update external plotter as well
+			#
+			if ext_link!=None: ext_link.slider.set_val(slider_time.val)
 		slider_time.on_changed(update)
 		#
 		# set xlog button
