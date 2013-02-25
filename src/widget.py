@@ -199,7 +199,7 @@ class plotter:
 		# define slider update funcion
 		#
 		def update(val):
-			i = int(round(slider_time.val))
+			i = int(np.floor(slider_time.val))
 			if y==None:
 				#
 				# update line data
@@ -279,7 +279,7 @@ class plotter:
 			#
 			newfig=plt.figure()
 			newax    = plt.subplot(111)
-			i        = int(round(slider_time.val))
+			i        = int(np.floor(slider_time.val))
 			plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]])
 			#
 			# draw labels
@@ -365,8 +365,8 @@ class plotter:
 			#
 			# save all the images
 			#
-			i0 = int(round(slider_time.val))
-			for j,i in enumerate(np.arange(i0,nt-1)):
+			i0 = int(np.floor(slider_time.val))
+			for j,i in enumerate(np.arange(i0,nt)):
 				slider_time.set_val(i)
 				plotbutton_callback(None,img_name=dirname+os.sep+'img_%03i'%j, img_format=img_format)
 			#
@@ -378,7 +378,7 @@ class plotter:
 				#
 				# delete the images & the folder
 				#
-				for j,i in enumerate(np.arange(i0,nt-1)):
+				for j,i in enumerate(np.arange(i0,nt)):
 					os.remove(dirname+os.sep+'img_%03i%s'%(j,img_format))
 				shutil.rmtree(dirname)
 				print('*** Movie successfully created ***')
