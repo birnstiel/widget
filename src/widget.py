@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 import sys,os,subprocess,shutil
+from string import ascii_letters
+from random import choice
 
 def main():
 	x     = np.linspace(1.0, 10.0, 200)
@@ -352,13 +354,13 @@ class plotter:
 		ax_moviebutton = plt.axes([0.7, 0.025, 0.1, 0.04])
 		button_movie = Button(ax_moviebutton, 'movie', color=axcolor, hovercolor='0.975')
 		def moviebutton_callback(event):
-			dirname    = 'movie_images'
+			dirname    = 'movie_images_'+''.join(choice(ascii_letters) for x in range(5))
 			img_format = '.png'
 			#
 			# create folder
 			#
 			if os.path.isdir(dirname):
-				print('WARNING: movie_images folder already exists, please delete it first')
+				print('WARNING: %s folder already exists, please delete it first'%dirname)
 				return
 			else:
 				os.mkdir(dirname)
@@ -373,6 +375,12 @@ class plotter:
 			# create the movie
 			#
 			moviename = 'movie.mp4'
+			i_suffix  = 0
+			dummy     = moviename
+			while os.path.isfile(dummy):
+				i_suffix += 1
+				dummy     = moviename.replace('.', '_%03i.'%i_suffix)
+			moviename = dummy
 			ret=subprocess.call(['ffmpeg','-i',dirname+os.sep+'img_%03d'+img_format,'-r','10','-b','512k',moviename]);
 			if ret==0:
 				#
