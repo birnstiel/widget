@@ -20,7 +20,7 @@ def main():
 	
 	p = plotter(x,data1D,times=times,data2=[0.5*data1D,0.25*data1D+5])
 	
-	plotter(x,data2D,y=y,times=times,data3=[times,5.0],lstyle=['-','--'],ext_link=p)
+	plotter(x,data2D,y=y,times=times,data3=[times,5.0],lstyle=[0.5*np.ones(4),'--'],ext_link=p)
 	
 	plt.show()
 
@@ -47,7 +47,7 @@ class plotter:
 		*[x,y,z]log* 	true: use logarithmic scale in [x,y,z]
 		*[x,y,z]lim*	give limits [x0,x1], ... for the specified axes    
 		*[x,y]label*	label for the [x,y] axes
-		*lstyle*		style (string) or styles (list of strings) to be used for the lines
+		*lstyle*		style (string or color specification) or list of styles to be used for the lines
 						will be repeatet if too short
 		*ncont*			number of contours for the contour plot
 		*cmap*			color map for the contours
@@ -126,7 +126,7 @@ class plotter:
 		#
 		# set line styles
 		#
-		if type(lstyle).__name__=='str': lstyle=[lstyle]
+		if type(lstyle).__name__!='list': lstyle=[lstyle]
 		len_ls0 = len(lstyle)
 		len_ls1 = len(data2)+len(data3)+1
 		dummy = []
@@ -163,7 +163,10 @@ class plotter:
 			#
 			# line data
 			#
-			l, = ax.plot(x,data[i_start],lstyle[0],lw=2)
+			if type(lstyle[0]).__name__=='str':
+				l, = ax.plot(x,data[i_start],lstyle[0],lw=2)
+			else:
+				l, = ax.plot(x,data[i_start],color=lstyle[0],lw=2)
 		else:
 			#
 			# 2D data
@@ -175,14 +178,20 @@ class plotter:
 		#
 		add_lines = []
 		for j,d in enumerate(data2):
-			l2, = ax.plot(x,d[i_start],lstyle[j+1],lw=2)
+			if type(lstyle[j+1]).__name__=='str':
+				l2, = ax.plot(x,d[i_start],lstyle[j+1],lw=2)
+			else:
+				l2, = ax.plot(x,d[i_start],color=lstyle[j+1],lw=2)
 			add_lines+=[l2]
 		#
 		# plot additional vertical lines
 		#
 		add_lines2 = []
 		for j,d in enumerate(data3):
-			l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+			if type(lstyle[j+1]).__name__=='str':
+				l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+			else:
+				l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),color=lstyle[j+1+len(data2)],lw=2)
 			add_lines2+=[l3]
 		#
 		# ========
@@ -301,7 +310,10 @@ class plotter:
 				#
 				# line data
 				#
-				l, = newax.plot(x,data[i],lstyle[0],lw=2)
+				if type(lstyle[0]).__name__=='str':
+					l, = newax.plot(x,data[i],lstyle[0],lw=2)
+				else:
+					l, = newax.plot(x,data[i],color=lstyle[0],lw=2)
 			else:
 				#
 				# 2D data
@@ -313,14 +325,20 @@ class plotter:
 			#
 			add_lines = []
 			for j,d in enumerate(data2):
-				l2, = newax.plot(x,d[i],lstyle[j+1],lw=2)
+				if type(lstyle[j+1]).__name__=='str':
+					l2, = newax.plot(x,d[i],lstyle[j+1],lw=2)
+				else:
+					l2, = newax.plot(x,d[i],color=lstyle[j+1],lw=2)
 				add_lines+=[l2]
 			#
 			# plot additional vertical lines
 			#
 			add_lines2 = []
 			for j,d in enumerate(data3):
-				l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+				if type(lstyle[j+1]).__name__=='str':
+					l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+				else:
+					l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),color=lstyle[j+1+len(data2)],lw=2)
 				add_lines2+=[l3]
 			#
 			# =========================================
@@ -398,6 +416,10 @@ class plotter:
 			slider_time.set_val(i0)
 		button_movie.on_clicked(moviebutton_callback)
 		ax._widgets += [button_movie] # avoids garbage collection
+		#
+		# make ax current axes, so that it is easier to interact with
+		#
+		plt.axes(ax)
 		#
 		# GO
 		#
