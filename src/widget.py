@@ -81,7 +81,7 @@ class plotter:
 		#
 		# color scheme 
 		#
-		if cmap==None: cmap='hot'
+		if cmap==None: cmap=plt.get_cmap('hot')
 		#
 		# convert data2 if necessary
 		#
@@ -427,3 +427,4 @@ class plotter:
 	
 if __name__ == "__main__":
 	main()
+
