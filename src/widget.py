@@ -25,7 +25,7 @@ def main():
 	plt.show()
 
 class plotter:
-	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True,ext_link=None):
+	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True,ext_link=None,dpi=None):
 		"""
 		creates a GUI to display timedependent 1D or 2D data.
 		
@@ -35,25 +35,51 @@ class plotter:
 			   - array of the form (nt*ny,nx) for nt 2D snapshots
 		
 		Keywords:
-		*y*     		y axis array for data of a form (nt*ny,nx) where the first ny rows are the fist snapshot
-		*data2*			for plotting additional 1-dimensional y(x) data on the 1D or 2D plot
-						join in a list if several data-sets should be included like
-						[y1 , y2] where y1,y2 are arrays of shape (nt,nx)
-		*data3*			for plotting additional vertical lines on the 1D or 2D plot
-						can be either nt points for x(t)-data or one single float if time dependent
-						join to lists if more data is plotted 
-		*times*			times of the snapshots, to be shown in the title of the axes, if given
-		*i_start*		index of initial snapshot
-		*[x,y,z]log* 	true: use logarithmic scale in [x,y,z]
-		*[x,y,z]lim*	give limits [x0,x1], ... for the specified axes    
-		*[x,y]label*	label for the [x,y] axes
-		*lstyle*		style (string or color specification) or list of styles to be used for the lines
-						will be repeatet if too short
-		*ncont*			number of contours for the contour plot
-		*cmap*			color map for the contours
-		*fill*			if true, data lower than zlim[0] will be rendered at lowest color level
-						if false, will be rendered white
-		*ext_link*		link an onther plotter object to the slider of the current one 
+		y
+		:	y axis array for data of a form (ntny,nx) where the first ny rows are the fist snapshot
+		
+		data2
+		:	for plotting additional 1-dimensional y(x) data on the 1D or 2D plot
+			join in a list if several data-sets should be included like
+			[y1 , y2] where y1,y2 are arrays of shape (nt,nx)
+			
+		data3
+		:	for plotting additional vertical lines on the 1D or 2D plot
+			can be either nt points for x(t)-data or one single float if time dependent
+			join to lists if more data is plotted
+			 
+		times
+		:	times of the snapshots, to be shown in the title of the axes, if given
+		
+		i_start
+		:	index of initial snapshot
+		[x,y,z]log
+		:	true: use logarithmic scale in [x,y,z]
+		
+		[x,y,z]lim
+		:	give limits [x0,x1], ... for the specified axes    
+		
+		[x,y]label
+		:	label for the [x,y] axes
+		
+		lstyle
+		:	style (string or color specification) or list of styles to be used for the lines
+			will be repeatet if too short
+		ncont
+		:	number of contours for the contour plot
+		
+		cmap
+		:	color map for the contours
+		
+		fill
+		:	if true, data lower than zlim[0] will be rendered at lowest color level
+			if false, will be rendered white
+			
+		ext_link
+		:	link an onther plotter object to the slider of the current one
+		
+		dpi
+		:	resolution for the produced images 
 		"""
 		#
 		# general setup
@@ -361,7 +387,7 @@ class plotter:
 				img_name = 'figure_%03i%s'%(j,img_format)
 			else:
 				img_name = img_name.replace(img_format,'')+img_format
-			plt.savefig(img_name)
+			plt.savefig(img_name,dpi=dpi)
 			print('saved %s'%img_name)
 			plt.close(newfig)
 		button_plot.on_clicked(plotbutton_callback)
