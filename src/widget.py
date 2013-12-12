@@ -25,7 +25,7 @@ def main():
 	plt.show()
 
 class plotter:
-	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True,ext_link=None,dpi=None):
+	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True,ext_link=None):
 		"""
 		creates a GUI to display timedependent 1D or 2D data.
 		
@@ -78,8 +78,6 @@ class plotter:
 		ext_link
 		:	link an onther plotter object to the slider of the current one
 		
-		dpi
-		:	resolution for the produced images 
 		"""
 		#
 		# general setup
@@ -314,10 +312,10 @@ class plotter:
 			# and getting the snapshot index from the slider
 			# ===================================================
 			#
-			newfig=plt.figure()
-			newax    = plt.subplot(111)
-			i        = int(np.floor(slider_time.val))
-			plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]])
+			newfig=plt.figure();
+			newax    = plt.subplot(111);
+			i        = int(np.floor(slider_time.val));
+			plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]]);
 			#
 			# draw labels
 			#
@@ -387,7 +385,7 @@ class plotter:
 				img_name = 'figure_%03i%s'%(j,img_format)
 			else:
 				img_name = img_name.replace(img_format,'')+img_format
-			plt.savefig(img_name,dpi=dpi)
+			plt.savefig(img_name)
 			print('saved %s'%img_name)
 			plt.close(newfig)
 		button_plot.on_clicked(plotbutton_callback)
@@ -414,7 +412,7 @@ class plotter:
 			i0 = int(np.floor(slider_time.val))
 			for j,i in enumerate(np.arange(i0,nt)):
 				slider_time.set_val(i)
-				plotbutton_callback(None,img_name=dirname+os.sep+'img_%03i'%j, img_format=img_format)
+				plotbutton_callback(None,img_name=dirname+os.sep+'img_%03i'%j, img_format=img_format);
 			#
 			# create the movie
 			#
@@ -425,7 +423,7 @@ class plotter:
 				i_suffix += 1
 				dummy     = moviename.replace('.', '_%03i.'%i_suffix)
 			moviename = dummy
-			ret=subprocess.call(['ffmpeg','-i',dirname+os.sep+'img_%03d'+img_format,'-r','10','-b','512k',moviename]);
+			ret=subprocess.call(['ffmpeg','-i',dirname+os.sep+'img_%03d'+img_format,'-c:v','libx264','-crf','20','-maxrate','400k','-pix_fmt','yuv420p','-bufsize','1835k',moviename]);
 			if ret==0:
 				#
 				# delete the images & the folder
