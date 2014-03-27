@@ -82,17 +82,33 @@ class plotter:
 		#
 		# general setup
 		#
-		if y==None:
-			nt,nx = data.shape
+		if y!=None:
+			if np.ndim(x)!=np.ndim(y):
+				print('ERROR: x and y need to be both 1D or both 2D')
+				sys.exit(1)		
+			
+			if (np.ndim(x)==2) and (x.shape!=y.shape):
+				print('ERROR: if x and y are given as 2D arrays, shape(x) need to be equal to shape(y)')
+				sys.exit(1)		
+			
+		if np.ndim(x)==1:
+			nx = len(x)
 		else:
-			nx = data.shape[1]
-			ny = len(y)
+			nx = x.shape[1]
+			
+		if y==None:
+			nt = data.shape[0]
+		else:
+			if np.ndim(y)==1:
+				ny = len(y)
+			else:
+				ny = x.shape[0]
 			nt = data.shape[0]/ny
 		#
 		# some size checks
 		#	
-		if nx!=len(x):
-			print('ERROR: len(x) does not match the number of columns of the data array')
+		if nx!=data.shape[1]:
+			print('ERROR: number of x points does not match the number of columns of the data array')
 			sys.exit(1)
 		if times!=None:
 			if nt != len(times):
@@ -124,12 +140,12 @@ class plotter:
 		#
 		# set limits
 		#
-		if xlim==None: xlim=[x[0],x[-1]]
+		if xlim==None: xlim=[x.min(),x.max()]
 		if ylim==None:
 			if y==None:
 				ylim=[data.min(),data.max()]
 			else:
-				ylim=[y[0],y[-1]]
+				ylim=[y.min(),y.max()]
 		if zlim==None: zlim=[data.min(),data.max()]
 		#
 		# zlog cannot just be set, we need to convert the data
