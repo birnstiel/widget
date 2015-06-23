@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from matplotlib.widgets import Slider, Button
 import sys,os,subprocess,shutil
 from string import ascii_letters
 from random import choice
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 
 def main():
 	x     = np.linspace(1.0, 10.0, 200)
@@ -20,12 +22,16 @@ def main():
 	
 	p = plotter(x,data1D,times=times,data2=[0.5*data1D,0.25*data1D+5])
 	
-	plotter(x,data2D,y=y,times=times,data3=[times,5.0],lstyle=[0.5*np.ones(4),'--'],ext_link=p)
+	plotter(x,data2D,y=y,times=times,data3=[times,5.0],lstyle=[0.5*np.ones(4),'--'],ext_link=p,\
+		colbar=True,show_legend=True,data_label='contours',data3_label=['line one','line two'])
 	
 	plt.show()
 
 class plotter:
-	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',lstyle='-',ncont=None,cmap=None,fill=True,ext_link=None):
+	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,\
+				xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',\
+				lstyle='-',ncont=None,cmap=None,ext_link=None,fill=True,bg_color='none',colbar=False,
+				show_legend=False,data_label=None,data2_label=None,data3_label=None,lw=2,**kwargs):
 		"""
 		creates a GUI to display timedependent 1D or 2D data.
 		
@@ -68,21 +74,46 @@ class plotter:
 		ncont
 		:	number of contours for the contour plot
 		
+		fill : bool
+		:	if true, emulate the extend='both' behavior for contourf in logspace
+		
 		cmap
 		:	color map for the contours
 		
-		fill
-		:	if true, data lower than zlim[0] will be rendered at lowest color level
-			if false, will be rendered white
-			
 		ext_link
 		:	link an onther plotter object to the slider of the current one
+		
+		bg_color : color spec
+		:	background color of plot
+		
+		label : array of strings
+		: array of strings belonging to the data, data2, data3 entries
+		
+		colbar : bool
+		:   whether or not to add a colorbar
+		
+		show_legend : bool
+		:	whether or not to show a legend
+		
+		data_label : string
+		:	label for the data
+
+		data2_label : array of strings
+		:	labels for lines in data2
+
+		data3_label : array of strings
+		:	labels for lines in data3
+		
+		lw : int or float
+		:   line width
+		
+		**kwargs : other keywords are passed to the plotting routine
 		
 		"""
 		#
 		# general setup
 		#
-		if y!=None:
+		if y is not None:
 			if np.ndim(x)!=np.ndim(y):
 				print('ERROR: x and y need to be both 1D or both 2D')
 				sys.exit(1)		
@@ -96,7 +127,7 @@ class plotter:
 		else:
 			nx = x.shape[1]
 			
-		if y==None:
+		if y is None:
 			nt = data.shape[0]
 		else:
 			if np.ndim(y)==1:
@@ -110,18 +141,18 @@ class plotter:
 		if nx!=data.shape[1]:
 			print('ERROR: number of x points does not match the number of columns of the data array')
 			sys.exit(1)
-		if times!=None:
+		if times is not None:
 			if nt != len(times):
 				print('ERROR: len(times) does not match (number of rows)/ny of the data array')
 				sys.exit(1)
-		if y==None:
+		if y is None:
 			i_max  = data.shape[0]-1
 		else:
 			i_max  = nt-1
 		#
 		# color scheme 
 		#
-		if cmap==None: cmap=plt.get_cmap('hot')
+		if cmap is None: cmap=plt.get_cmap('hot')
 		#
 		# convert data2 if necessary
 		#
@@ -140,29 +171,38 @@ class plotter:
 		#
 		# set limits
 		#
-		if xlim==None: xlim=[x.min(),x.max()]
-		if ylim==None:
-			if y==None:
+		if xlim is None: xlim=[x.min(),x.max()]
+		if ylim is None:
+			if y is None:
 				ylim=[data.min(),data.max()]
 			else:
 				ylim=[y.min(),y.max()]
-		if zlim==None: zlim=[data.min(),data.max()]
+		if zlim is None: zlim=[data.min(),data.max()]
 		#
-		# zlog cannot just be set, we need to convert the data
+		# set logarithmic color axis
 		#
 		if zlog:
-			data=np.log10(data)
-			zlim=np.log10(zlim)
+			#data=np.log10(data)
+			#zlim=np.log10(zlim)
+			norm = LogNorm()
+			if ncont is None:
+				zax = 10.**np.arange(np.ceil(np.log10(zlim[0])),np.floor(np.log10(zlim[-1]))+1)
+			else:
+				zax = np.logspace(np.log10(zlim[0]),np.log10(zlim[-1]),ncont)
+			if zax[0]>zlim[0]:
+				zax = np.append(zlim[0],zax)
+			if zax[-1]<zlim[-1]:
+				zax = np.append(zax,zlim[-1])
+			ncont = len(zax)
+		else:
+			norm = None    
+			if ncont is None: ncont = 10
+			zax = np.linspace(zlim[0],zlim[1],ncont)
 		#
 		# add floor value
 		#
 		if fill:
 			data = np.maximum(data,zlim[0])
-		#
-		# set number of contours
-		#
-		if ncont==None:
-			ncont=zlim[-1]-zlim[0]+1
 		#
 		# set line styles
 		#
@@ -176,13 +216,13 @@ class plotter:
 		#
 		# set up figure
 		#
-		plt.figure()
+		plt.figure(facecolor=bg_color)
 		#
 		# ===============
 		# INITIAL DRAWING
 		# ===============
 		#
-		ax    = plt.subplot(111)
+		ax    = plt.subplot(111,axisbg=bg_color)
 		plt.subplots_adjust(left=0.25, bottom=0.25)
 		plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]])
 		#
@@ -190,28 +230,34 @@ class plotter:
 		#
 		if xlabel!='': plt.xlabel(xlabel)
 		if ylabel!='': plt.ylabel(ylabel)
-		if times!=None: ti=plt.title('%g'%times[i_start])
+		if times is not None: ti=plt.title('%g'%times[i_start])
 		#
 		# set scales
 		#
 		if xlog: ax.set_xscale('log')
 		if ylog: ax.set_yscale('log')
 		#
+		# make empty labels if none are passed
+		#
+		if data_label  is None: data_label = ''
+		if data2_label is None: data2_label=['']*len(data2)
+		if data3_label is None: data3_label=['']*len(data3)
+		#
 		# plot the normal data
 		#
-		if y==None:
+		if y is None:
 			#
 			# line data
 			#
 			if type(lstyle[0]).__name__=='str':
-				l, = ax.plot(x,data[i_start],lstyle[0],lw=2)
+				l, = ax.plot(x,data[i_start],lstyle[0],lw=lw,label=data_label)
 			else:
-				l, = ax.plot(x,data[i_start],color=lstyle[0],lw=2)
+				l, = ax.plot(x,data[i_start],color=lstyle[0],lw=lw,label=data_label)
 		else:
 			#
 			# 2D data
 			#
-			l  = ax.contourf(x,y,data[i_start*ny+np.arange(ny),:],np.linspace(zlim[0],zlim[-1],ncont),cmap=cmap)
+			l  = ax.contourf(x,y,data[i_start*ny+np.arange(ny),:],zax,cmap=cmap,norm=norm,label=data_label,**kwargs)
 			clist = l.collections[:]
 		#
 		# plot additional line data
@@ -219,9 +265,9 @@ class plotter:
 		add_lines = []
 		for j,d in enumerate(data2):
 			if type(lstyle[j+1]).__name__=='str':
-				l2, = ax.plot(x,d[i_start],lstyle[j+1],lw=2)
+				l2, = ax.plot(x,d[i_start],lstyle[j+1],lw=lw,label=data2_label[j])
 			else:
-				l2, = ax.plot(x,d[i_start],color=lstyle[j+1],lw=2)
+				l2, = ax.plot(x,d[i_start],color=lstyle[j+1],lw=lw,label=data2_label[j])
 			add_lines+=[l2]
 		#
 		# plot additional vertical lines
@@ -229,10 +275,21 @@ class plotter:
 		add_lines2 = []
 		for j,d in enumerate(data3):
 			if type(lstyle[j+1]).__name__=='str':
-				l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+				l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),lstyle[j+1+len(data2)],lw=lw,label=data3_label[j])
 			else:
-				l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),color=lstyle[j+1+len(data2)],lw=2)
+				l3, = ax.plot(d[min(i_start,len(d)-1)]*np.ones(2),ax.get_ylim(),color=lstyle[j+1+len(data2)],lw=lw,label=data3_label[j])
 			add_lines2+=[l3]
+		if show_legend:
+			leg=ax.legend()
+			leg.get_frame().set_facecolor(bg_color)
+			leg.get_frame().set_edgecolor('none')
+		#
+		# add colorbar
+		#
+		if colbar:
+			divider = make_axes_locatable(ax)  
+			cax     = divider.append_axes("right", size="5%", pad=0.05)  
+			plt.colorbar(l, cax=cax);
 		#
 		# ========
 		# Make GUI
@@ -251,7 +308,7 @@ class plotter:
 		#
 		def update(val):
 			i = int(np.floor(slider_time.val))
-			if y==None:
+			if y is None:
 				#
 				# update line data
 				#
@@ -264,9 +321,9 @@ class plotter:
 					for col in clist:
 						ax.collections.remove(col)
 						clist.remove(col)
-				dummy  = ax.contourf(x,y,data[i*ny+np.arange(ny),:],np.linspace(zlim[0],zlim[-1],ncont),cmap=cmap)
-				for d in dummy.collections:
-					clist.append(d)
+				dummy  = ax.contourf(x,y,data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,**kwargs)
+				if colbar: plt.colorbar(dummy, cax=cax);
+				for d in dummy.collections: clist.append(d)
 			#
 			# update additional lines
 			#
@@ -281,7 +338,7 @@ class plotter:
 			#
 			# update title
 			#
-			if times!=None: ti.set_text('%g'%times[i])
+			if times is not None: ti.set_text('%g'%times[i])
 			#
 			# update plot
 			#
@@ -289,7 +346,7 @@ class plotter:
 			#
 			# update external plotter as well
 			#
-			if ext_link!=None: ext_link.slider.set_val(slider_time.val)
+			if ext_link is not None: ext_link.slider.set_val(slider_time.val)
 		slider_time.on_changed(update)
 		#
 		# set xlog button
@@ -328,8 +385,8 @@ class plotter:
 			# and getting the snapshot index from the slider
 			# ===================================================
 			#
-			newfig=plt.figure();
-			newax    = plt.subplot(111);
+			newfig=plt.figure(facecolor=bg_color);
+			newax    = plt.subplot(111,axisbg=bg_color);
 			i        = int(np.floor(slider_time.val));
 			plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]]);
 			#
@@ -337,7 +394,7 @@ class plotter:
 			#
 			if xlabel!='': plt.xlabel(xlabel)
 			if ylabel!='': plt.ylabel(ylabel)
-			if times!=None: ti=plt.title('%g'%times[i])
+			if times is not None: ti=plt.title('%g'%times[i])
 			#
 			# set scales
 			#
@@ -346,29 +403,33 @@ class plotter:
 			#
 			# plot the normal data
 			#
-			if y==None:
+			if y is None:
 				#
 				# line data
 				#
 				if type(lstyle[0]).__name__=='str':
-					l, = newax.plot(x,data[i],lstyle[0],lw=2)
+					l, = newax.plot(x,data[i],lstyle[0],lw=lw,label=data_label)
 				else:
-					l, = newax.plot(x,data[i],color=lstyle[0],lw=2)
+					l, = newax.plot(x,data[i],color=lstyle[0],lw=lw,label=data_label)
 			else:
 				#
 				# 2D data
 				#
-				l  = newax.contourf(x,y,data[i*ny+np.arange(ny),:],np.linspace(zlim[0],zlim[-1],ncont),cmap=cmap)
+				l  = newax.contourf(x,y,data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,label=data_label,**kwargs)
 				clist = l.collections[:]
+				if colbar:
+					divider = make_axes_locatable(newax)  
+					newcax  = divider.append_axes("right", size="5%", pad=0.05)  
+					plt.colorbar(l, cax=newcax);
 			#
 			# plot additional line data
 			#
 			add_lines = []
 			for j,d in enumerate(data2):
 				if type(lstyle[j+1]).__name__=='str':
-					l2, = newax.plot(x,d[i],lstyle[j+1],lw=2)
+					l2, = newax.plot(x,d[i],lstyle[j+1],lw=lw,label=data2_label[j])
 				else:
-					l2, = newax.plot(x,d[i],color=lstyle[j+1],lw=2)
+					l2, = newax.plot(x,d[i],color=lstyle[j+1],lw=lw,label=data2_label[j])
 				add_lines+=[l2]
 			#
 			# plot additional vertical lines
@@ -376,10 +437,14 @@ class plotter:
 			add_lines2 = []
 			for j,d in enumerate(data3):
 				if type(lstyle[j+1]).__name__=='str':
-					l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),lstyle[j+1+len(data2)],lw=2)
+					l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),lstyle[j+1+len(data2)],lw=lw,label=data3_label[j])
 				else:
-					l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),color=lstyle[j+1+len(data2)],lw=2)
+					l3, = newax.plot(d[min(i,len(d)-1)]*np.ones(2),newax.get_ylim(),color=lstyle[j+1+len(data2)],lw=lw,label=data3_label[j])
 				add_lines2+=[l3]
+			if show_legend:
+				leg=newax.legend()
+				leg.get_frame().set_facecolor(bg_color)
+				leg.get_frame().set_edgecolor('none')
 			#
 			# =========================================
 			# now set the limits as in the other figure
@@ -395,13 +460,13 @@ class plotter:
 			# =========================================
 			#
 			if '.' not in img_format: img_format = '.'+img_format
-			if img_name==None:
+			if img_name is None:
 				j=0
 				while os.path.isfile('figure_%03i%s'%(j,img_format)): j+=1
 				img_name = 'figure_%03i%s'%(j,img_format)
 			else:
 				img_name = img_name.replace(img_format,'')+img_format
-			plt.savefig(img_name)
+			plt.savefig(img_name,facecolor=bg_color)
 			print('saved %s'%img_name)
 			plt.close(newfig)
 		button_plot.on_clicked(plotbutton_callback)
