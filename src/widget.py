@@ -118,9 +118,9 @@ class plotter:
 				print('ERROR: x and y need to be both 1D or both 2D')
 				sys.exit(1)		
 			
-			if (np.ndim(x)==2) and (x.shape!=y.shape):
-				print('ERROR: if x and y are given as 2D arrays, shape(x) need to be equal to shape(y)')
-				sys.exit(1)		
+			if (np.ndim(x)==2) and (x.shape[1]!=y.shape[1]):
+				print('ERROR: x and y need to have same number of columns')
+				sys.exit(1)
 			
 		if np.ndim(x)==1:
 			nx = len(x)
@@ -135,6 +135,11 @@ class plotter:
 			else:
 				ny = x.shape[0]
 			nt = data.shape[0]/ny
+		#
+		# check if we have a y-axis that is time dependent
+		#
+		y_of_t=False
+		if np.ndim(y)==2 and y.shape[0]/ny==nt: y_of_t=True
 		#
 		# some size checks
 		#	
@@ -257,8 +262,12 @@ class plotter:
 			#
 			# 2D data
 			#
-			l  = ax.contourf(x,y,data[i_start*ny+np.arange(ny),:],zax,cmap=cmap,norm=norm,label=data_label,**kwargs)
-			clist = l.collections[:]
+			if y_of_t:
+				l  = ax.contourf(x,y[i_start*ny+np.arange(ny),:],data[i_start*ny+np.arange(ny),:],zax,cmap=cmap,norm=norm,label=data_label,**kwargs)
+				clist = l.collections[:]
+			else:
+				l  = ax.contourf(x,y,data[i_start*ny+np.arange(ny),:],zax,cmap=cmap,norm=norm,label=data_label,**kwargs)
+				clist = l.collections[:]
 		#
 		# plot additional line data
 		#
@@ -321,7 +330,10 @@ class plotter:
 					for col in clist:
 						ax.collections.remove(col)
 						clist.remove(col)
-				dummy  = ax.contourf(x,y,data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,**kwargs)
+				if y_of_t:
+					dummy  = ax.contourf(x,y[i*ny+np.arange(ny),:],data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,**kwargs)
+				else:
+					dummy  = ax.contourf(x,y,data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,**kwargs)
 				if colbar: plt.colorbar(dummy, cax=cax);
 				for d in dummy.collections: clist.append(d)
 			#
@@ -415,8 +427,12 @@ class plotter:
 				#
 				# 2D data
 				#
-				l  = newax.contourf(x,y,data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,label=data_label,**kwargs)
-				clist = l.collections[:]
+				if y_of_t:
+					l  = newax.contourf(x,y[i*ny+np.arange(ny),:],data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,label=data_label,**kwargs)
+					clist = l.collections[:]
+				else:
+					l  = newax.contourf(x,y,data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,label=data_label,**kwargs)
+					clist = l.collections[:]
 				if colbar:
 					divider = make_axes_locatable(newax)  
 					newcax  = divider.append_axes("right", size="5%", pad=0.05)  
