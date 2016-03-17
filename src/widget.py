@@ -165,7 +165,7 @@ class plotter:
 		#
 		# color scheme 
 		#
-		if cmap is None: cmap=plt.get_cmap('hot')
+		if cmap is None: cmap=plt.get_cmap('viridis')
 		#
 		# convert data2 if necessary
 		#
