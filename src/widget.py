@@ -31,7 +31,7 @@ class plotter:
 	def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,\
 				xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',\
 				lstyle='-',ncont=None,cmap=None,ext_link=None,fill=True,bg_color='none',colbar=False,
-				show_legend=False,data_label=None,data2_label=None,data3_label=None,lw=2,**kwargs):
+				show_legend=False,data_label=None,data2_label=None,data3_label=None,lw=2,dpi=None,**kwargs):
 		"""
 		creates a GUI to display timedependent 1D or 2D data.
 		
@@ -107,9 +107,13 @@ class plotter:
 		lw : int or float
 		:   line width
 		
+		dpi : int
+		:   dpi for plotting images, defaults to rcParams['figure.dpi']
+		
 		**kwargs : other keywords are passed to the plotting routine
 		
 		"""
+		dpi = dpi or plt.rcParams['figure.dpi']
 		#
 		# general setup
 		#
@@ -138,8 +142,12 @@ class plotter:
 		#
 		# check if we have a y-axis that is time dependent
 		#
-		y_of_t=False
-		if np.ndim(y)==2 and y.shape[0]/ny==nt: y_of_t=True
+		y_of_t = False
+		x_1D   = x
+		if np.ndim(y)==2 and y.shape[0]/ny==nt:
+			y_of_t=True
+			x_1D = x[0,:]
+			
 		#
 		# some size checks
 		#	
@@ -274,9 +282,9 @@ class plotter:
 		add_lines = []
 		for j,d in enumerate(data2):
 			if type(lstyle[j+1]).__name__=='str':
-				l2, = ax.plot(x,d[i_start],lstyle[j+1],lw=lw,label=data2_label[j])
+				l2, = ax.plot(x_1D,d[i_start,:],lstyle[j+1],lw=lw,label=data2_label[j])
 			else:
-				l2, = ax.plot(x,d[i_start],color=lstyle[j+1],lw=lw,label=data2_label[j])
+				l2, = ax.plot(x_1D,d[i_start,:],color=lstyle[j+1],lw=lw,label=data2_label[j])
 			add_lines+=[l2]
 		#
 		# plot additional vertical lines
@@ -420,9 +428,9 @@ class plotter:
 				# line data
 				#
 				if type(lstyle[0]).__name__=='str':
-					l, = newax.plot(x,data[i],lstyle[0],lw=lw,label=data_label)
+					l, = newax.plot(x_1D,data[i],lstyle[0],lw=lw,label=data_label)
 				else:
-					l, = newax.plot(x,data[i],color=lstyle[0],lw=lw,label=data_label)
+					l, = newax.plot(x_1D,data[i],color=lstyle[0],lw=lw,label=data_label)
 			else:
 				#
 				# 2D data
@@ -443,9 +451,9 @@ class plotter:
 			add_lines = []
 			for j,d in enumerate(data2):
 				if type(lstyle[j+1]).__name__=='str':
-					l2, = newax.plot(x,d[i],lstyle[j+1],lw=lw,label=data2_label[j])
+					l2, = newax.plot(x_1D,d[i,:],lstyle[j+1],lw=lw,label=data2_label[j])
 				else:
-					l2, = newax.plot(x,d[i],color=lstyle[j+1],lw=lw,label=data2_label[j])
+					l2, = newax.plot(x_1D,d[i,:],color=lstyle[j+1],lw=lw,label=data2_label[j])
 				add_lines+=[l2]
 			#
 			# plot additional vertical lines
@@ -482,7 +490,7 @@ class plotter:
 				img_name = 'figure_%03i%s'%(j,img_format)
 			else:
 				img_name = img_name.replace(img_format,'')+img_format
-			plt.savefig(img_name,facecolor=bg_color)
+			plt.savefig(img_name,facecolor=bg_color,dpi=dpi)
 			print('saved %s'%img_name)
 			plt.close(newfig)
 		button_plot.on_clicked(plotbutton_callback)
@@ -520,6 +528,7 @@ class plotter:
 				i_suffix += 1
 				dummy     = moviename.replace('.', '_%03i.'%i_suffix)
 			moviename = dummy
+			
 			ret=subprocess.call(['ffmpeg','-i',dirname+os.sep+'img_%03d'+img_format,'-c:v','libx264','-crf','20','-maxrate','400k','-pix_fmt','yuv420p','-bufsize','1835k',moviename]);
 			if ret==0:
 				#
