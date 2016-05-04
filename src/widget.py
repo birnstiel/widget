@@ -28,7 +28,7 @@ def main():
     plt.show()
 
 class plotter:
-    def __init__(self,x,data,y=None,data2=[],data3=[],times=None,i_start=0,\
+    def __init__(self,x,data,y=None,data2=[],data3=[],times=None,timestr='',i_start=0,\
                 xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',\
                 lstyle='-',ncont=None,cmap=None,ext_link=None,fill=True,bg_color='none',colbar=False,
                 show_legend=False,data_label=None,data2_label=None,data3_label=None,lw=2,dpi=None,**kwargs):
@@ -56,6 +56,9 @@ class plotter:
              
         times
         :    times of the snapshots, to be shown in the title of the axes, if given
+        
+        timestr : string
+        :   string to be appended after the 'time' title
         
         i_start
         :    index of initial snapshot
@@ -236,7 +239,7 @@ class plotter:
         #
         if xlabel!='': plt.xlabel(xlabel)
         if ylabel!='': plt.ylabel(ylabel)
-        if times is not None: ti=plt.title('%g'%times[i_start])
+        if times is not None: ti=plt.title('{:g} {}'.format(times[i_start],timestr))
         #
         # set scales
         #
@@ -358,7 +361,7 @@ class plotter:
             #
             # update title
             #
-            if times is not None: ti.set_text('%g'%times[i])
+            if times is not None: ti.set_text('{:g} {}'.format(times[i],timestr))
             #
             # update plot
             #
@@ -414,7 +417,7 @@ class plotter:
             #
             if xlabel!='': plt.xlabel(xlabel)
             if ylabel!='': plt.ylabel(ylabel)
-            if times is not None: ti=plt.title('%g'%times[i])
+            if times is not None: ti=plt.title('{:g} {}'.format(times[i],timestr))
             #
             # set scales
             #
