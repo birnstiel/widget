@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from matplotlib.widgets import Slider, Button
+from matplotlib import ticker
 import sys,os,subprocess,shutil
 from string import ascii_letters
 from random import choice
@@ -30,7 +31,7 @@ def main():
 class plotter:
     def __init__(self,x,data,y=None,data2=[],data3=[],times=None,timestr='',i_start=0,\
                 xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',\
-                lstyle='-',ncont=None,cmap=None,ext_link=None,fill=True,bg_color='none',colbar=False,
+                lstyle='-',ncont=None,cmap=None,ext_link=None,fill=True,bg_color='none',bg_color_ax='none',colbar=False,
                 show_legend=False,data_label=None,data2_label=None,data3_label=None,lw=2,dpi=None,**kwargs):
         """
         creates a GUI to display timedependent 1D or 2D data.
@@ -88,6 +89,9 @@ class plotter:
         
         bg_color : color spec
         :    background color of plot
+        
+        bg_color_ax : color spec
+        :    background color of axes
         
         colbar : bool
         :   whether or not to add a colorbar
@@ -231,7 +235,14 @@ class plotter:
         # INITIAL DRAWING
         # ===============
         #
-        ax    = plt.subplot(111,axisbg=bg_color)
+        #
+        if zlog:
+            locator = ticker.LogLocator()
+        else:
+            locator = ticker.MaxNLocator(nbins=7)
+        #
+        #
+        ax    = plt.subplot(111,axisbg=bg_color_ax)
         plt.subplots_adjust(left=0.25, bottom=0.25)
         plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]])
         #
@@ -304,6 +315,8 @@ class plotter:
             divider = make_axes_locatable(ax)  
             cax     = divider.append_axes("right", size="5%", pad=0.05)  
             cb=plt.colorbar(l, cax=cax);
+            cb.locator = locator
+            cb.update_ticks()
             if show_legend and data_label!='':
                 cb.set_label(data_label)
         #
@@ -343,6 +356,8 @@ class plotter:
                     dummy  = ax.contourf(x,y,data[i*ny+np.arange(ny),:],zax,norm=norm,cmap=cmap,**kwargs)
                 if colbar:
                     cb=plt.colorbar(dummy, cax=cax);
+                    cb.locator = locator
+                    cb.update_ticks()
                     if show_legend and data_label!='':
                         cb.set_label(data_label)
                     
@@ -408,6 +423,11 @@ class plotter:
             # and getting the snapshot index from the slider
             # ===================================================
             #
+            if zlog:
+                locator = ticker.LogLocator()
+            else:
+                locator = ticker.MaxNLocator(nbins=7)
+            
             newfig=plt.figure(facecolor=bg_color);
             newax    = plt.subplot(111,axisbg=bg_color);
             i        = int(np.floor(slider_time.val));
@@ -448,6 +468,8 @@ class plotter:
                     divider = make_axes_locatable(newax)  
                     newcax  = divider.append_axes("right", size="5%", pad=0.05)  
                     cb=plt.colorbar(l, cax=newcax)
+                    cb.locator = locator
+                    cb.update_ticks()
                     if show_legend and data_label!='':
                         cb.set_label(data_label)
             #
