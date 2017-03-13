@@ -31,7 +31,7 @@ def main():
 class plotter:
     def __init__(self,x,data,y=None,data2=[],data3=[],times=None,timestr='',i_start=0,\
                 xlog=False,ylog=False,zlog=False,xlim=None,ylim=None,zlim=None,xlabel='',ylabel='',\
-                lstyle='-',ncont=None,cmap=None,ext_link=None,fill=True,bg_color='none',bg_color_ax='none',colbar=False,
+                lstyle='-',ncont=None,cmap=None,ext_link=None,fill=True,bg_color='w',bg_color_ax='none',colbar=False,
                 show_legend=False,data_label=None,data2_label=None,data3_label=None,lw=2,dpi=None,**kwargs):
         """
         creates a GUI to display timedependent 1D or 2D data.
@@ -229,7 +229,7 @@ class plotter:
         #
         # set up figure
         #
-        plt.figure(facecolor=bg_color)
+        fig = plt.figure(facecolor=bg_color)
         #
         # ===============
         # INITIAL DRAWING
@@ -242,7 +242,7 @@ class plotter:
             locator = ticker.MaxNLocator(nbins=7)
         #
         #
-        ax    = plt.subplot(111,axisbg=bg_color_ax)
+        ax    = plt.subplot(111,facecolor=bg_color_ax)
         plt.subplots_adjust(left=0.25, bottom=0.25)
         plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]])
         #
@@ -328,7 +328,7 @@ class plotter:
         # make time slider
         #
         axcolor     = 'lightgoldenrodyellow'
-        ax_time     = plt.axes([0.25, 0.1, 0.65, 0.03], axisbg=axcolor)
+        ax_time     = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor=axcolor)
         slider_time = Slider(ax_time, 'time', 0.0, i_max, valinit=i_start,valfmt='%i')
         self.slider = slider_time
         ax._widgets = [slider_time] # avoids garbage collection
@@ -380,7 +380,7 @@ class plotter:
             #
             # update plot
             #
-            plt.draw()
+            fig.canvas.draw()
             #
             # update external plotter as well
             #
@@ -429,7 +429,7 @@ class plotter:
                 locator = ticker.MaxNLocator(nbins=7)
             
             newfig=plt.figure(facecolor=bg_color);
-            newax    = plt.subplot(111,axisbg=bg_color);
+            newax    = plt.subplot(111,facecolor=bg_color);
             i        = int(np.floor(slider_time.val));
             plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]]);
             #
