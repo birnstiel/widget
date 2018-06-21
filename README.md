@@ -1,3 +1,7 @@
-# Disk Temperature Package
+# Plotting Widget
 
-This is a package for a simple temperature estimates in protoplanetary disks. It includes a class `tmid` to estimate the mid-plane temperature, `pmstracks` to download and interpolate the Siess et al. 2000 PMS evolutionary tracks. It also includes some *yet unfinished* code for gas opacities.
+This package contains a plotting widget that enables interactive plotting of
+1, 2, and 3D data using line or contour plots. One dimension can be scrolled
+through.
+
+See the `main` function in `widget/widget.py` for examples.
